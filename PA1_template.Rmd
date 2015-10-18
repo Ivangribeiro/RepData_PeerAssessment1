@@ -1,25 +1,136 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
+
+##Loading data
+
+```{r}
+Data <- read.csv("activity.csv")
+```
+
+##What is mean total number of steps taken per day?
+
+###Total number of steps taken per day
+```{r}
+daily.total <- aggregate(Data$steps, list(Data$date), sum)
+colnames(daily.total) <- c("Date", "Steps")
+```
 
 
-## Loading and preprocessing the data
+```{r}
+with(daily.total, {
+      par(oma=c(2,0,0,0), las=2, font.lab=2, cex.axis=0.5 )
+      barplot(
+      height=Steps,
+      col=c("blue"),
+      main="Total Steps",
+      xlab="Day",
+      ylab="Number of steps",
+      names.arg=Date,
+      space=c(0)
+    )
+})
+```
+
+### Mean of total steps per day
+```{r}
+daily.mean <- mean(daily.total$Steps, na.rm=TRUE)
+daily.mean
+```
+
+### Median of total steps per day
+```{r}
+daily.median <- median(daily.total$Steps, na.rm=TRUE)
+daily.median
+```
+
+##What is the average daily activity pattern?
+
+###Here we find the mean steps taken for eatch 5-minute time interval.
+
+###Generate the mean number of steps taken for each 5-minute interval.
+```{r}
+pattern <- aggregate(
+    data=Data,
+    steps~interval,
+    FUN=mean,
+    na.action=na.omit
+)
+colnames(pattern) <- c("Interval", "Average.Steps")
+```
+
+###Time-Series plot 
+```{r}
+with(pattern, {
+    plot(
+      x=Interval,
+      y=Average.Steps,
+      type="l",
+      main="Average Steps Time-Series",
+      xlab="Interval",
+      ylab="Average Steps"
+
+    )
+})
+```
+
+###5-minute interval with the maximum number of steps
+```{r}
+Max <- pattern[pattern$Average.Steps==max(pattern$Average.Steps),]
+Max
+```
+
+###The interval 835-840 minutes shows maximum number of steps.
+
+##Imputing missing values
+
+###Total number of missing values.
+```{r}
+NAcount <- nrow(subset(Data, is.na(Data$steps)))
+NAcount
+```
+
+### Filling NA values with average 5-minute interval valuesr.
+```{r}
+NAsub <- data.frame(Data$steps)
+NAsub[is.na(NAsub),] <- ceiling(tapply(X=Data$steps,INDEX=Data$interval,FUN=mean,na.rm=TRUE))
+newData <- cbind(NAsub, Data[,2:3])
+colnames(newData) <- c("Steps", "Date", "Interval")
+```
+
+###Data with substituted NA
+```{r}
+newsubset <- aggregate(newData$Steps, list(newData$Date), sum)
+colnames(newsubset) <- c("Date", "Steps")
+
+```
 
 
+```{r}
+with(newsubset, {
+      par(oma=c(2,0,0,0), las=2, font.lab=2, cex.axis=0.5 )
+      barplot(
+      height=Steps,
+      col=c("blue"),
+      main="Total Steps",
+      xlab="Day",
+      ylab="Number of steps",
+      names.arg=Date,
+      space=c(0)
+    )
+})
+```
 
-## What is mean total number of steps taken per day?
+### Mean of total steps per day
+```{r}
+new.mean <- mean(newsubset$Steps, na.rm=TRUE)
+new.mean
+```
 
+### Median of total steps per day
+```{r}
+new.median <- median(newsubset$Steps, na.rm=TRUE)
+new.median
+```
 
+###By filling the missing values both the mean and median values were slightly altered.
 
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
+##Are there differences in activity patterns between weekdays and weekends?
